@@ -1,5 +1,6 @@
-# Stress-Field Transfer Experiments
+# A Diffusion Model with Key Node Feature Guidance for Digital Twin of Rocket Engine Frames under Variable Working Conditions
 
+This repo contains the official implementation for the paper "A Diffusion Model with Key Node Feature Guidance for Digital Twin of Rocket Engine Frames under Variable Working Conditions".
 This repository contains the implementation of the stress-field transfer method used in the paper, together with five comparison methods and the scripts used for timing analysis.
 
 ## What Is Included
