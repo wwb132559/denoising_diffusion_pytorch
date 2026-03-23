@@ -1,5 +1,4 @@
 """
-Paper-specific diffusion model for stress-field transfer learning.
 
 The released experiment workflow is:
 1. Offline pretraining on source-domain stress fields.
@@ -36,7 +35,6 @@ from torch.optim import Adam
 from ema_pytorch import EMA
 from torchvision import transforms as T, utils
 from Scheduler import GradualWarmupScheduler
-from fid_evaluation import FIDEvaluation
 from einops import rearrange, reduce, repeat
 from einops.layers.torch import Rearrange
 from stress_data_utils import load_real_stress_data, make_synthetic_stress_data
@@ -950,11 +948,7 @@ class Trainer(object):
             mixed_precision_type='fp16',
             split_batches=False,
             convert_image_to=None,
-            calculate_fid=False,
-            inception_block_idx=2048,
             max_grad_norm=1.,
-            num_fid_samples=50000,
-            save_best_and_latest_only=False
     ):
         super().__init__()
 
@@ -970,8 +964,6 @@ class Trainer(object):
         self.model = diffusion_model
         self.channels = diffusion_model.channels
         self.classes = classes
-        is_ddim_sampling = diffusion_model.is_ddim_sampling
-
         # default convert_image_to depending on channels
 
         if not exists(convert_image_to):
@@ -1032,34 +1024,6 @@ class Trainer(object):
         # prepare model, dataloader, optimizer with accelerator
 
         self.model, self.opt = self.accelerator.prepare(self.model, self.opt)
-
-        # FID-score computation
-
-        self.calculate_fid = calculate_fid and self.accelerator.is_main_process
-
-        if self.calculate_fid:
-            if not is_ddim_sampling:
-                self.accelerator.print(
-                    "WARNING: Robust FID computation requires a lot of generated samples and can therefore be very time consuming." \
-                    "Consider using DDIM sampling to save time."
-                )
-            self.fid_scorer = FIDEvaluation(
-                batch_size=self.batch_size,
-                dl=self.dl,
-                sampler=self.ema.ema_model,
-                channels=self.channels,
-                accelerator=self.accelerator,
-                stats_dir=results_folder,
-                device=self.device,
-                num_fid_samples=num_fid_samples,
-                inception_block_idx=inception_block_idx
-            )
-
-        if save_best_and_latest_only:
-            assert calculate_fid, "`calculate_fid` must be True to provide a means for model evaluation for `save_best_and_latest_only`."
-            self.best_fid = 1e10  # infinite
-
-        self.save_best_and_latest_only = save_best_and_latest_only
 
     @property
     def device(self):
@@ -1217,30 +1181,7 @@ class Trainer(object):
 
                     if self.step != 0 and self.step % self.save_and_sample_every == 0:
                         self.ema.ema_model.eval()
-                        # milestone = self.step // self.save_and_sample_every
-
-                        # with torch.inference_mode():
-                        # milestone = self.step // self.save_and_sample_every
-                        # batches = num_to_groups(self.num_samples, self.batch_size)
-                        # all_images_list = list(map(lambda n: self.ema.ema_model.sample(batch_size=n), batches))
-
-                        # all_images = torch.cat(all_images_list, dim = 0)
-
-                        # utils.save_image(all_images, str(self.results_folder / f'sample-{milestone}.png'), nrow = int(math.sqrt(self.num_samples)))
                         self.save(type)
-
-                        # whether to calculate fid
-
-                        if self.calculate_fid:
-                            fid_score = self.fid_scorer.fid_score()
-                            accelerator.print(f'fid_score: {fid_score}')
-                        if self.save_best_and_latest_only:
-                            if self.best_fid > fid_score:
-                                self.best_fid = fid_score
-                                self.save(type)
-                            self.save(type)
-                        else:
-                            self.save(type)
 
                 pbar.update(1)
 
