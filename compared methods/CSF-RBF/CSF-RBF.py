@@ -1,11 +1,5 @@
 """
-Reproduction-style implementation of a multifidelity RBF surrogate.
-
-Important note
---------------
-The uploaded paper is "Multifidelity Surrogate Based on Single Linear Regression",
-which proposes LR-MFS, not a method explicitly named "CSF-RBF".
-However, the paper states that the discrepancy term can be modeled with
+The paper states that the discrepancy term can be modeled with
 other basis functions such as radial basis functions, and all coefficients
 can still be solved in one augmented linear-regression system.
 
@@ -16,8 +10,6 @@ This file therefore implements a faithful and practical variant:
 where delta_RBF(x) is expanded by RBF basis functions and solved together
 with rho by least squares / ridge-regularized least squares.
 
-If you later upload the exact CSF-RBF paper, this file can be adapted
-to the exact equations line by line.
 """
 
 from __future__ import annotations
