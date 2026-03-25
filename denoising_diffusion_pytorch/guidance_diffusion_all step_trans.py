@@ -1274,7 +1274,7 @@ def build_argparser():
     parser.add_argument('--target-data', type=str, default=None, help='Explicit path to target-domain data tensor.')
     parser.add_argument('--classes-emb', type=str, default=None, help='Explicit path to condition embedding tensor.')
     parser.add_argument('--results-dir', type=str, default=None, help='Directory for checkpoints and outputs.')
-    parser.add_argument('--offline-steps', type=int, default=300, help='Offline pretraining steps.')
+    parser.add_argument('--offline-steps', type=int, default=1000, help='Offline pretraining steps.')
     parser.add_argument('--online-steps', type=int, default=300, help='Online fine-tuning steps.')
     parser.add_argument('--sampling-steps', type=int, default=100, help='Sampling steps for diffusion.')
     parser.add_argument('--batch-size', type=int, default=24, help='Training batch size.')
